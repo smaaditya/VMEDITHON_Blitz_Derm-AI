@@ -11,7 +11,7 @@ import folium
 from streamlit_js_eval import get_geolocation
 import google.generativeai as genai
 
-st.set_page_config(page_title="Cancer Information and Diagnosis Assistant", layout="wide")
+st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
 
 # Custom CSS
 st.markdown("""
@@ -42,7 +42,7 @@ st.markdown("""
 
 
 # Set up OpenAI API key
-openai.api_key = "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"
+
 gmaps = googlemaps.Client(key="AIzaSyBZ54CrwbNjBiKKs-4NydriYQTp0yEGFlM")
 # Load the model
 model = load_model('weights.h5')
@@ -103,21 +103,13 @@ def get_location_name(lat, lng):
     return "Unknown location"
 
 # Streamlit app layout
-st.title("Cancer Information and Diagnosis Assistant")
-st.write("Upload images for skin cancer classification or ask questions about cancer.")
+st.title("Derm-AI Assistant")
+st.write("Cancer Information and Diagnosis Assistant")
 
 # Create tabs for different sections
-tab1, tab2, tab3 = st.tabs(["Chatbot", "Image Classification", "Nearby Hospitals"])
+tab1, tab2, tab3 = st.tabs(["Image Classification","Chatbot", "Nearby Hospitals"])
 
 with tab1:
-    st.header("Medical Chatbot")
-    user_input = st.text_input("Ask a question about cancer treatment, diagnosis, or prevention:", "")
-
-    if user_input:
-        response = get_chatbot_response(user_input)
-        st.text_area("Medical Chatbot:", value=response, height=200, max_chars=None, key=None)
-
-with tab2:
     st.header("Skin Cancer Image Classification")
     uploaded_files = st.file_uploader("Choose images for skin cancer classification:", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
@@ -144,6 +136,17 @@ with tab2:
                     st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
     else:
         st.info("Please upload at least one image for skin cancer classification.")
+
+with tab2:
+    st.header("Medical Chatbot")
+    user_input = st.text_input("Ask a question about cancer treatment, diagnosis, or prevention:", "")
+
+    if user_input:
+        response = get_chatbot_response(user_input)
+        st.text_area("Medical Chatbot:", value=response, height=200, max_chars=None, key=None)
+
+
+
 
 with tab3:
     st.header("Find Nearby Cancer Hospitals")
@@ -213,4 +216,4 @@ Early detection is crucial. If you notice any concerning changes, consult a heal
 
 # Footer
 st.markdown("---")
-st.markdown("© 2024 Cancer Information and Diagnosis Assistant. This app is for informational purposes only and does not substitute professional medical advice.")
+st.markdown("© 2024 Derm-AI. This app is for informational purposes only and does not substitute professional medical advice.")
