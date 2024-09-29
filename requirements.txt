@@ -2,7 +2,7 @@ streamlit
 openai
 tensorflow
 numpy 
-PIL 
+Pillow
 time
 googlemaps
 streamlit-folium
