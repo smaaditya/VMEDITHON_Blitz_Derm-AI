@@ -1,0 +1,11 @@
+streamlit
+openai
+tensorflow
+numpy 
+PIL 
+time
+googlemaps
+streamlit-folium
+folium
+streamlit-js-eval
+google-generativeai  
