@@ -62,10 +62,10 @@ def get_chatbot_response(user_input):
     Provide concise answers, but elaborate when necessary for complex topics. 
     Always prioritize accurate medical information and encourage users to consult healthcare professionals for personalized advice.
 
-    User query: {user_input}
     """
     response = chat.send_message(user_input)
-    return response.text
+    response_text = response.text.replace("**", "").replace("\n\n", "\n").strip()
+    return response_text
 
 def get_nearby_hospitals(lat, lng):
     # Search for nearby cancer hospitals
