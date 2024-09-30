@@ -261,46 +261,46 @@ def main():
 
             uploaded_files = st.file_uploader("Choose images for skin cancer classification:", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-            if uploaded_files:
-    if len(uploaded_files) < 1 or len(uploaded_files) > 3:
-        st.warning("Please upload between 1 to 3 images.")
+    if uploaded_files:
+        if len(uploaded_files) < 1 or len(uploaded_files) > 3:
+            st.warning("Please upload between 1 to 3 images.")
+        else:
+            for i, uploaded_file in enumerate(uploaded_files):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+                
+                with col2:
+                    try:
+                        image = Image.open(uploaded_file)
+                        processed_image = preprocess_image(image)
+                        prediction = model.predict(processed_image)
+                        class_label = "Potentially Malignant" if prediction[0] > 0.5 else "Likely Not Malignant"
+    
+                        st.write(f"Prediction: {class_label}")
+                        st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
+                        st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
+    
+                        if st.button(f"Generate PDF Report for {uploaded_file.name}", key=f"generate_pdf_{i}"):
+                            patient_info = {
+                                "Name": patient_name,
+                                "Age": str(patient_age),
+                                "Sex": patient_sex,
+                                "Contact": patient_contact,
+                                "Patient ID": patient_id if patient_id else "N/A"
+                            }
+                            pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
+                            st.download_button(
+                                label=f"Download PDF Report for {uploaded_file.name}",
+                                data=pdf_buffer,
+                                file_name=f"patient_report_{patient_name.replace(' ', '_')}_{i}.pdf",
+                                mime="application/pdf",
+                                key=f"download_pdf_{i}"
+                            )
+                    except Exception as e:
+                        st.error(f"An error occurred during processing: {str(e)}")
     else:
-        for i, uploaded_file in enumerate(uploaded_files):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
-            
-            with col2:
-                try:
-                    image = Image.open(uploaded_file)
-                    processed_image = preprocess_image(image)
-                    prediction = model.predict(processed_image)
-                    class_label = "Potentially Malignant" if prediction[0] > 0.5 else "Likely Not Malignant"
-
-                    st.write(f"Prediction: {class_label}")
-                    st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
-                    st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
-
-                    if st.button(f"Generate PDF Report for {uploaded_file.name}", key=f"generate_pdf_{i}"):
-                        patient_info = {
-                            "Name": patient_name,
-                            "Age": str(patient_age),
-                            "Sex": patient_sex,
-                            "Contact": patient_contact,
-                            "Patient ID": patient_id if patient_id else "N/A"
-                        }
-                        pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
-                        st.download_button(
-                            label=f"Download PDF Report for {uploaded_file.name}",
-                            data=pdf_buffer,
-                            file_name=f"patient_report_{patient_name.replace(' ', '_')}_{i}.pdf",
-                            mime="application/pdf",
-                            key=f"download_pdf_{i}"
-                        )
-                except Exception as e:
-                    st.error(f"An error occurred during processing: {str(e)}")
-else:
-    st.info("Please upload at least one image for skin cancer classification.")
+        st.info("Please upload at least one image for skin cancer classification.")
 
         with tab2:
             st.header("Medical Chatbot")
