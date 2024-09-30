@@ -225,7 +225,7 @@ with tab1:
                     if st.button("Generate PDF Report"):
                         patient_info = {
                             "Name": patient_name,
-                            "Age": patient_age,
+                            "Age": str(patient_age),
                             "Sex": patient_sex,
                             "Contact": patient_contact
                             "Patient ID": patient_id if patient_id else "N/A"
@@ -234,7 +234,7 @@ with tab1:
                         st.download_button(
                             label="Download PDF Report",
                             data=pdf_buffer,
-                            file_name="patient_report.pdf",
+                            file_name=f"patient_report_{patient_name.replace(' ', '_')}.pdf",
                             mime="application/pdf"
                         )
     else:
