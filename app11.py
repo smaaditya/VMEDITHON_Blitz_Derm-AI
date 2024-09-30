@@ -225,7 +225,7 @@ def main():
                 st.error("Please check your OAuth configuration and network connection.")
 
     # Check for the authorization response
-    params = st.experimental_get_query_params()
+    params = st.query_params
     if 'code' in params:
         try:
             flow.fetch_token(code=params['code'][0])
