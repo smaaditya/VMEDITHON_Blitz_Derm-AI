@@ -14,6 +14,10 @@ import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.units import inch
+from datetime import datetime
 
 st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
 
