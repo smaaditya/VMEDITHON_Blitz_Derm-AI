@@ -33,7 +33,9 @@ Chatbot: Interact with the AI medical assistant.
 Image Classification: Upload images for skin cancer detection.
 Nearby Hospitals: Find cancer hospitals using your geolocation.
 
+
 🛠️ Technologies Used
+
 Python: Core programming language for the app.
 Streamlit: Framework for building the user interface.
 TensorFlow: For building and deploying the CNN-based image classification model.
