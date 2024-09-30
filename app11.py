@@ -66,9 +66,7 @@ client_config = {
 flow = Flow.from_client_config(
     client_config,
     scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
-    redirect_uri=st.secrets["REDIRECT_URI"],
-    access_type='offline',
-    include_granted_scopes=True
+    redirect_uri=st.secrets["REDIRECT_URI"]
 )
 # Helper functions
 def preprocess_image(image):
@@ -216,12 +214,15 @@ def main():
         # If not authenticated, show the login button
         if st.sidebar.button("Login with Google", key="login_button"):
             try:
-                authorization_url, _ = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes=True)
+                authorization_url, _ = flow.authorization_url(
+                    prompt='consent',
+                    access_type='offline',
+                    include_granted_scopes='true'
+                )
                 st.sidebar.markdown(f'<a href="{authorization_url}" target="_self">Click here to login</a>', unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"An error occurred during login: {str(e)}")
                 st.error("Please check your OAuth configuration and network connection.")
-                st.info("Try clearing your browser cache and cookies, or use a different browser.")
 
     # Check for the authorization response
     params = st.experimental_get_query_params()
