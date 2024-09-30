@@ -31,7 +31,7 @@ flow = Flow.from_client_secrets_file(
     scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
     redirect_uri='http://localhost:8501/'
 )
-
+st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
 def main():
     st.title("Streamlit Google OAuth Login")
 
@@ -84,7 +84,7 @@ def display_user_info(credentials):
 
 if __name__ == "__main__":
     main()
-st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
+
 
 # Custom CSS
 st.markdown("""
