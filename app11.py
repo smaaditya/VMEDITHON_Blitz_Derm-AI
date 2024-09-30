@@ -112,21 +112,47 @@ def create_pdf_report(patient_info, image, prediction, class_label):
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
+    # Add header
+    c.setFillColor(colors.navy)
+    c.rect(0, height - 50, width, 50, fill=True)
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(50, height - 35, "Derm-AI Assistant Report")
+
+    # Add report date
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 10)
+    report_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    c.drawString(width - 200, height - 65, f"Report Date: {report_date}")
+
     # Add patient information
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, height - 50, "Patient Report")
-    c.setFont("Helvetica", 12)
-    y = height - 80
-    for key, value in patient_info.items():
-        c.drawString(50, y, f"{key}: {value}")
-        y -= 20
+    c.drawString(50, height - 100, "Patient Information")
+    
+    data = [[key, value] for key, value in patient_info.items()]
+    table = Table(data, colWidths=[100, 200])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+    ]))
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 50, height - 250)
 
     # Add image classification results
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(50, y - 20, "Image Classification Results")
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, height - 280, "Image Classification Results")
     c.setFont("Helvetica", 12)
-    c.drawString(50, y - 40, f"Prediction: {class_label}")
-    c.drawString(50, y - 60, f"Confidence Score: {(prediction[0][0]*100):.2f }%")
+    c.drawString(50, height - 300, f"Prediction: {class_label}")
+    c.drawString(50, height - 320, f"Confidence Score: {(prediction[0][0]*100):.2f}%")
 
     # Add the image
     img_width, img_height = image.size
@@ -135,7 +161,15 @@ def create_pdf_report(patient_info, image, prediction, class_label):
     max_height = 300
     display_width = min(max_width, img_width)
     display_height = min(max_height, int(display_width * aspect))
-    c.drawImage(ImageReader(image), 50, y - 70 - display_height, width=display_width, height=display_height)
+    c.drawImage(ImageReader(image), 50, height - 320 - display_height, width=display_width, height=display_height)
+
+    # Add footer
+    c.setFillColor(colors.grey)
+    c.rect(0, 0, width, 30, fill=True)
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 8)
+    c.drawString(50, 10, "© 2024 Derm-AI. This report is for informational purposes only and does not substitute professional medical advice.")
+    c.drawString(width - 200, 10, f"Page 1 of 1")
 
     c.showPage()
     c.save()
@@ -160,6 +194,7 @@ with tab1:
     patient_age = st.number_input("Age", min_value=0, max_value=120)
     patient_sex = st.selectbox("Sex", ["Male", "Female", "Other"])
     patient_contact = st.text_input("Contact Details")
+    patient_id = st.text_input("Patient ID (optional)")
 
     uploaded_files = st.file_uploader("Choose images for skin cancer classification:", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
@@ -193,6 +228,7 @@ with tab1:
                             "Age": patient_age,
                             "Sex": patient_sex,
                             "Contact": patient_contact
+                            "Patient ID": patient_id if patient_id else "N/A"
                         }
                         pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
                         st.download_button(
