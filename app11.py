@@ -178,7 +178,6 @@ def create_pdf_report(patient_info, image, prediction, class_label):
 
 # ... (keep the existing functions) ...
 
-# Streamlit app layout
 st.title("Derm-AI Assistant")
 st.write("Cancer Information and Diagnosis Assistant")
 
@@ -227,7 +226,7 @@ with tab1:
                             "Name": patient_name,
                             "Age": str(patient_age),
                             "Sex": patient_sex,
-                            "Contact": patient_contact
+                            "Contact": patient_contact,
                             "Patient ID": patient_id if patient_id else "N/A"
                         }
                         pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
@@ -239,7 +238,6 @@ with tab1:
                         )
     else:
         st.info("Please upload at least one image for skin cancer classification.")
-
 with tab2:
     st.header("Medical Chatbot")
     user_input = st.text_input("Ask a question about cancer treatment, diagnosis, or prevention:", "")
