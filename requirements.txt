@@ -3,7 +3,7 @@ openai
 tensorflow
 numpy 
 Pillow
-
+reportlab
 googlemaps
 streamlit-folium
 folium
