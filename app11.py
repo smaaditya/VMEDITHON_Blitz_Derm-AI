@@ -10,10 +10,6 @@ from streamlit_folium import folium_static
 import folium
 from streamlit_js_eval import get_geolocation
 import google.generativeai as genai
-import io
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 
 st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
 
@@ -107,60 +103,14 @@ def get_location_name(lat, lng):
     return "Unknown location"
 
 # Streamlit app layout
-def create_pdf_report(patient_info, image, prediction, class_label):
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    # Add patient information
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, height - 50, "Patient Report")
-    c.setFont("Helvetica", 12)
-    y = height - 80
-    for key, value in patient_info.items():
-        c.drawString(50, y, f"{key}: {value}")
-        y -= 20
-
-    # Add image classification results
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(50, y - 20, "Image Classification Results")
-    c.setFont("Helvetica", 12)
-    c.drawString(50, y - 40, f"Prediction: {class_label}")
-    c.drawString(50, y - 60, f"Confidence Score: {(prediction[0][0]*100):.2f }%")
-
-    # Add the image
-    img_width, img_height = image.size
-    aspect = img_height / float(img_width)
-    max_width = 400
-    max_height = 300
-    display_width = min(max_width, img_width)
-    display_height = min(max_height, int(display_width * aspect))
-    c.drawImage(ImageReader(image), 50, y - 70 - display_height, width=display_width, height=display_height)
-
-    c.showPage()
-    c.save()
-    buffer.seek(0)
-    return buffer
-
-# ... (keep the existing functions) ...
-
-# Streamlit app layout
 st.title("Derm-AI Assistant")
 st.write("Cancer Information and Diagnosis Assistant")
 
 # Create tabs for different sections
-tab1, tab2, tab3 = st.tabs(["Image Classification", "Chatbot", "Nearby Hospitals"])
+tab1, tab2, tab3 = st.tabs(["Image Classification","Chatbot", "Nearby Hospitals"])
 
 with tab1:
     st.header("Skin Cancer Image Classification")
-    
-    # Patient information form
-    st.subheader("Patient Information")
-    patient_name = st.text_input("Name")
-    patient_age = st.number_input("Age", min_value=0, max_value=120)
-    patient_sex = st.selectbox("Sex", ["Male", "Female", "Other"])
-    patient_contact = st.text_input("Contact Details")
-
     uploaded_files = st.file_uploader("Choose images for skin cancer classification:", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
     if uploaded_files:
@@ -183,24 +133,7 @@ with tab1:
 
                     # Display the result
                     st.write(f"Prediction: {class_label}")
-                    st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
                     st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
-
-                    # Create and offer PDF download
-                    if st.button("Generate PDF Report"):
-                        patient_info = {
-                            "Name": patient_name,
-                            "Age": patient_age,
-                            "Sex": patient_sex,
-                            "Contact": patient_contact
-                        }
-                        pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
-                        st.download_button(
-                            label="Download PDF Report",
-                            data=pdf_buffer,
-                            file_name="patient_report.pdf",
-                            mime="application/pdf"
-                        )
     else:
         st.info("Please upload at least one image for skin cancer classification.")
 
