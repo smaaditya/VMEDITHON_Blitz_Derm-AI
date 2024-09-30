@@ -18,7 +18,72 @@ from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib.units import inch
 from datetime import datetime
+import streamlit as st
+import os
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+import json
 
+# Set up the OAuth 2.0 flow
+flow = Flow.from_client_secrets_file(
+    'client_secrets.json',
+    scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
+    redirect_uri='http://localhost:8501/'
+)
+
+def main():
+    st.title("Streamlit Google OAuth Login")
+
+    # Check if the user is already authenticated
+    if 'credentials' in st.session_state:
+        credentials = Credentials(**st.session_state['credentials'])
+        if credentials and credentials.valid:
+            st.success("You are logged in!")
+            display_user_info(credentials)
+            if st.button("Logout"):
+                del st.session_state['credentials']
+                st.experimental_rerun()
+        else:
+            del st.session_state['credentials']
+            st.experimental_rerun()
+    else:
+        # If not authenticated, show the login button
+        if st.button("Login with Google"):
+            authorization_url, _ = flow.authorization_url(prompt='consent')
+            st.markdown(f'<a href="{authorization_url}" target="_self">Click here to login</a>', unsafe_allow_html=True)
+
+    # Check for the authorization response
+    params = st.experimental_get_query_params()
+    if 'code' in params:
+        try:
+            flow.fetch_token(code=params['code'][0])
+            credentials = flow.credentials
+            st.session_state['credentials'] = {
+                'token': credentials.token,
+                'refresh_token': credentials.refresh_token,
+                'token_uri': credentials.token_uri,
+                'client_id': credentials.client_id,
+                'client_secret': credentials.client_secret,
+                'scopes': credentials.scopes
+            }
+            st.experimental_set_query_params()
+            st.experimental_rerun()
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+def display_user_info(credentials):
+    try:
+        service = build('oauth2', 'v2', credentials=credentials)
+        user_info = service.userinfo().get().execute()
+        st.write(f"Welcome, {user_info['name']}!")
+        st.write(f"Email: {user_info['email']}")
+        st.image(user_info['picture'], width=100)
+    except Exception as e:
+        st.error(f"An error occurred while fetching user info: {e}")
+
+if __name__ == "__main__":
+    main()
 st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
 
 # Custom CSS
