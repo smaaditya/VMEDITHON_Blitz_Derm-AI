@@ -197,6 +197,7 @@ def display_user_info(credentials):
         st.sidebar.error(f"An error occurred while fetching user info: {e}")
 
 def main():
+    def main():
     st.title("Derm-AI Assistant")
     st.write("Cancer Information and Diagnosis Assistant")
 
@@ -205,7 +206,7 @@ def main():
         credentials = Credentials(**st.session_state['credentials'])
         if credentials and credentials.valid:
             display_user_info(credentials)
-            if st.sidebar.button("Logout"):
+            if st.sidebar.button("Logout", key="logout_button"):
                 del st.session_state['credentials']
                 st.experimental_rerun()
         else:
@@ -213,13 +214,14 @@ def main():
             st.experimental_rerun()
     else:
         # If not authenticated, show the login button
-        if 'login_button_clicked' not in st.session_state:
-            st.session_state.login_button_clicked = False
-    
-        if st.sidebar.button("Login with Google", key="login_button") or st.session_state.login_button_clicked:
-            st.session_state.login_button_clicked = True
-            authorization_url, _ = flow.authorization_url(prompt='consent')
-            st.sidebar.markdown(f'<a href="{authorization_url}" target="_self">Click here to login</a>', unsafe_allow_html=True)
+        if st.sidebar.button("Login with Google", key="login_button"):
+            try:
+                authorization_url, _ = flow.authorization_url(prompt='consent', access_type='offline', include_granted_scopes=True)
+                st.sidebar.markdown(f'<a href="{authorization_url}" target="_self">Click here to login</a>', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"An error occurred during login: {str(e)}")
+                st.error("Please check your OAuth configuration and network connection.")
+                st.info("Try clearing your browser cache and cookies, or use a different browser.")
 
     # Check for the authorization response
     params = st.experimental_get_query_params()
@@ -238,7 +240,10 @@ def main():
             st.experimental_set_query_params()
             st.experimental_rerun()
         except Exception as e:
-            st.error(f"An error occurred: {e}")
+            st.error(f"An error occurred during token exchange: {str(e)}")
+            st.error("Please try logging in again. If the problem persists, contact support.")
+
+    # ... rest of your main() function ...
 
     # Main application content
     if 'credentials' in st.session_state:
