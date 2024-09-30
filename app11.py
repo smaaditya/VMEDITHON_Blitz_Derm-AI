@@ -151,6 +151,8 @@ st.write("Cancer Information and Diagnosis Assistant")
 # Create tabs for different sections
 tab1, tab2, tab3 = st.tabs(["Image Classification", "Chatbot", "Nearby Hospitals"])
 
+# ... (previous code remains unchanged)
+
 with tab1:
     st.header("Skin Cancer Image Classification")
     
@@ -167,7 +169,7 @@ with tab1:
         if len(uploaded_files) < 1 or len(uploaded_files) > 3:
             st.warning("Please upload between 1 to 3 images.")
         else:
-            for uploaded_file in uploaded_files:
+            for index, uploaded_file in enumerate(uploaded_files):
                 col1, col2 = st.columns(2)
                 with col1:
                     st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
@@ -183,11 +185,11 @@ with tab1:
 
                     # Display the result
                     st.write(f"Prediction: {class_label}")
-                    st.write(f"Confidence Score: {prediction[0][0]:.2f}")
+                    st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
                     st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
 
                     # Create and offer PDF download
-                    if st.button("Generate PDF Report"):
+                    if st.button("Generate PDF Report", key=f"generate_pdf_{index}"):
                         patient_info = {
                             "Name": patient_name,
                             "Age": patient_age,
@@ -198,11 +200,14 @@ with tab1:
                         st.download_button(
                             label="Download PDF Report",
                             data=pdf_buffer,
-                            file_name="patient_report.pdf",
-                            mime="application/pdf"
+                            file_name=f"patient_report_{index}.pdf",
+                            mime="application/pdf",
+                            key=f"download_pdf_{index}"
                         )
     else:
         st.info("Please upload at least one image for skin cancer classification.")
+
+# ... (rest of the code remains unchanged)
 
 with tab2:
     st.header("Medical Chatbot")
