@@ -14,6 +14,13 @@ import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.units import inch
+from datetime import datetime
 
 st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
 
@@ -107,6 +114,7 @@ def get_location_name(lat, lng):
     return "Unknown location"
 
 # Streamlit app layout
+
 def create_pdf_report(patient_info, image, prediction, class_label):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -175,7 +183,6 @@ def create_pdf_report(patient_info, image, prediction, class_label):
     c.save()
     buffer.seek(0)
     return buffer
-
 # ... (keep the existing functions) ...
 
 # Streamlit app layout
@@ -191,11 +198,17 @@ with tab1:
     st.header("Skin Cancer Image Classification")
     
     # Patient information form
-    st.subheader("Patient Information")
-    patient_name = st.text_input("Name")
-    patient_age = st.number_input("Age", min_value=0, max_value=120)
-    patient_sex = st.selectbox("Sex", ["Male", "Female", "Other"])
-    patient_contact = st.text_input("Contact Details")
+    with st.form("patient_info"):
+        st.subheader("Patient Information")
+        patient_name = st.text_input("Name")
+        patient_age = st.number_input("Age", min_value=0, max_value=120)
+        patient_sex = st.selectbox("Sex", ["Male", "Female", "Other"])
+        patient_contact = st.text_input("Contact Details")
+        patient_id = st.text_input("Patient ID (optional)")
+        submit_button = st.form_submit_button("Submit")
+
+    if submit_button:
+        st.success("Patient information submitted successfully!")
 
     uploaded_files = st.file_uploader("Choose images for skin cancer classification:", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
@@ -209,35 +222,34 @@ with tab1:
                     st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
                 
                 with col2:
-                    # Preprocess the image
-                    image = Image.open(uploaded_file)
-                    processed_image = preprocess_image(image)
+                    try:
+                        image = Image.open(uploaded_file)
+                        processed_image = preprocess_image(image)
+                        prediction = model.predict(processed_image)
+                        class_label = "Potentially Malignant" if prediction[0] > 0.5 else "Likely Not Malignant"
 
-                    # Make predictions
-                    prediction = model.predict(processed_image)
-                    class_label = "Potentially Malignant" if prediction[0] > 0.5 else "Likely Not Malignant"
+                        st.write(f"Prediction: {class_label}")
+                        st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
+                        st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
 
-                    # Display the result
-                    st.write(f"Prediction: {class_label}")
-                    st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
-                    st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
-
-                    # Create and offer PDF download
-                    if st.button("Generate PDF Report", key=f"generate_pdf_{index}"):
-                        patient_info = {
-                            "Name": patient_name,
-                            "Age": patient_age,
-                            "Sex": patient_sex,
-                            "Contact": patient_contact
-                        }
-                        pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
-                        st.download_button(
-                            label="Download PDF Report",
-                            data=pdf_buffer,
-                            file_name=f"patient_report_{index}.pdf",
-                            mime="application/pdf",
-                            key=f"download_pdf_{index}"
-                        )
+                        if st.button(f"Generate PDF Report for {uploaded_file.name}", key=f"generate_pdf_{index}"):
+                            patient_info = {
+                                "Name": patient_name,
+                                "Age": str(patient_age),
+                                "Sex": patient_sex,
+                                "Contact": patient_contact,
+                                "Patient ID": patient_id if patient_id else "N/A"
+                            }
+                            pdf_buffer = create_pdf_report(patient_info, image, prediction, class_label)
+                            st.download_button(
+                                label=f"Download PDF Report for {uploaded_file.name}",
+                                data=pdf_buffer,
+                                file_name=f"patient_report_{patient_name.replace(' ', '_')}_{index}.pdf",
+                                mime="application/pdf",
+                                key=f"download_pdf_{index}"
+                            )
+                    except Exception as e:
+                        st.error(f"An error occurred during processing: {str(e)}")
     else:
         st.info("Please upload at least one image for skin cancer classification.")
 
