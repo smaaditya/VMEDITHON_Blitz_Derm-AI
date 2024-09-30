@@ -1,4 +1,4 @@
-#🌟 DermAI 🌟
+🌟 DermAI 🌟
 
 "Where AI meets Dermatology for Early Cancer Detection"
 
