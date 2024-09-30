@@ -160,7 +160,7 @@ def create_pdf_report(patient_info, image, prediction, class_label):
     c.drawString(50, height - 280, "Image Classification Results")
     c.setFont("Helvetica", 12)
     c.drawString(50, height - 300, f"Prediction: {class_label}")
-    c.drawString(50, height - 320, f"Confidence Score: {(prediction[0][0]*100):.2f}%")
+    
 
     # Add the image
     img_width, img_height = image.size
@@ -229,7 +229,7 @@ with tab1:
                         class_label = "Potentially Malignant" if prediction[0] > 0.5 else "Likely Not Malignant"
 
                         st.write(f"Prediction: {class_label}")
-                        st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
+                        
                         st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
 
                         if st.button(f"Generate PDF Report for {uploaded_file.name}", key=f"generate_pdf_{index}"):
