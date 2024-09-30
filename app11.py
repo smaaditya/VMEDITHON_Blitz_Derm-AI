@@ -212,7 +212,11 @@ def main():
             st.experimental_rerun()
     else:
         # If not authenticated, show the login button
-        if st.sidebar.button("Login with Google"):
+        if 'login_button_clicked' not in st.session_state:
+            st.session_state.login_button_clicked = False
+    
+        if st.sidebar.button("Login with Google", key="login_button") or st.session_state.login_button_clicked:
+            st.session_state.login_button_clicked = True
             authorization_url, _ = flow.authorization_url(prompt='consent')
             st.sidebar.markdown(f'<a href="{authorization_url}" target="_self">Click here to login</a>', unsafe_allow_html=True)
 
@@ -277,7 +281,9 @@ def main():
                                 st.write(f"Confidence Score: {(prediction[0][0]*100):.2f}%")
                                 st.write("Note: This is a preliminary assessment. Please consult a dermatologist for a professional diagnosis.")
 
-                                if st.button("Generate PDF Report"):
+                               
+                                if st.button(f"Generate PDF Report for {uploaded_file.name}", key=f"pdf_button_{uploaded_file.name}"):
+
                                     patient_info = {
                                         "Name": patient_name,
                                         "Age": str(patient_age),
@@ -325,7 +331,8 @@ def main():
                     with col1:
                         st.subheader("Nearest 10 Hospitals")
                         for i, hospital in enumerate(hospitals, 1):
-                            with st.expander(f"{i}. {hospital['name']}"):
+                            with st.expander(f"{i}. {hospital['name']}", key=f"hospital_{i}"):
+
                                 st.write(f"Phone: {hospital['phone_number']}")
                                 if hospital['website'] != 'N/A':
                                     st.write(f"Website: [{hospital['website']}]({hospital['website']})")
