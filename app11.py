@@ -66,9 +66,10 @@ client_config = {
 flow = Flow.from_client_config(
     client_config,
     scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
-    redirect_uri=st.secrets["REDIRECT_URI"]
+    redirect_uri=st.secrets["REDIRECT_URI"],
+    access_type='offline',
+    include_granted_scopes=True
 )
-
 # Helper functions
 def preprocess_image(image):
     img = image.resize((128, 128))
