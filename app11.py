@@ -197,7 +197,7 @@ def display_user_info(credentials):
         st.sidebar.error(f"An error occurred while fetching user info: {e}")
 
 def main():
-    def main():
+    
     st.title("Derm-AI Assistant")
     st.write("Cancer Information and Diagnosis Assistant")
 
