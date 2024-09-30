@@ -1,15 +1,13 @@
 import streamlit as st
-import openai
+import google.generativeai as genai
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
-import time
 import googlemaps
 from streamlit_folium import folium_static
 import folium
 from streamlit_js_eval import get_geolocation
-import google.generativeai as genai
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -18,110 +16,41 @@ from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib.units import inch
 from datetime import datetime
-import streamlit as st
-import os
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
-import json
 
-# Set up the OAuth 2.0 flow
-flow = Flow.from_client_secrets_file(
-    'client_secrets.json',
-    scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
-    redirect_uri='http://localhost:8501/'
-)
+# Set page config at the very beginning
 st.set_page_config(page_title="Derm-AI Assistant", layout="wide")
-def main():
-    st.title("Streamlit Google OAuth Login")
-
-    # Check if the user is already authenticated
-    if 'credentials' in st.session_state:
-        credentials = Credentials(**st.session_state['credentials'])
-        if credentials and credentials.valid:
-            st.success("You are logged in!")
-            display_user_info(credentials)
-            if st.button("Logout"):
-                del st.session_state['credentials']
-                st.experimental_rerun()
-        else:
-            del st.session_state['credentials']
-            st.experimental_rerun()
-    else:
-        # If not authenticated, show the login button
-        if st.button("Login with Google"):
-            authorization_url, _ = flow.authorization_url(prompt='consent')
-            st.markdown(f'<a href="{authorization_url}" target="_self">Click here to login</a>', unsafe_allow_html=True)
-
-    # Check for the authorization response
-    params = st.experimental_get_query_params()
-    if 'code' in params:
-        try:
-            flow.fetch_token(code=params['code'][0])
-            credentials = flow.credentials
-            st.session_state['credentials'] = {
-                'token': credentials.token,
-                'refresh_token': credentials.refresh_token,
-                'token_uri': credentials.token_uri,
-                'client_id': credentials.client_id,
-                'client_secret': credentials.client_secret,
-                'scopes': credentials.scopes
-            }
-            st.experimental_set_query_params()
-            st.experimental_rerun()
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-
-def display_user_info(credentials):
-    try:
-        service = build('oauth2', 'v2', credentials=credentials)
-        user_info = service.userinfo().get().execute()
-        st.write(f"Welcome, {user_info['name']}!")
-        st.write(f"Email: {user_info['email']}")
-        st.image(user_info['picture'], width=100)
-    except Exception as e:
-        st.error(f"An error occurred while fetching user info: {e}")
-
-if __name__ == "__main__":
-    main()
-
 
 # Custom CSS
 st.markdown("""
 <style>
-    /* Change background color of the active tab */
     div[data-baseweb="tab"] {
         background-color: #f5f7fa;
     }
-    
-    /* Change background color of the selected tab */
     div[data-baseweb="tab"] button[aria-selected="true"] {
         background-color: #0073e6;
         color: white;
     }
-
-    /* Change background color of unselected tabs */
     div[data-baseweb="tab"] button[aria-selected="false"] {
         background-color: #f0f2f6;
         color: #333;
     }
-
-    /* Change hover effect on unselected tabs */
     div[data-baseweb="tab"] button[aria-selected="false"]:hover {
         background-color: #d6e4ff;
     }
 </style>
 """, unsafe_allow_html=True)
 
+# Set up API keys and clients
+gmaps = googlemaps.Client(key="AIzaSyDD3k1fw2nnrIpZY-Lq17fJS6rB6ibvNmM")
+genai.configure(api_key="AIzaSyA8CHnU_1P-UMjwR9bK9Fn77zmymPNXC5Y")
 
-# Set up OpenAI API key
-
-gmaps = googlemaps.Client(key="AIzaSyBZ54CrwbNjBiKKs-4NydriYQTp0yEGFlM")
 # Load the model
 model = load_model('weights.h5')
 
-genai.configure(api_key="AIzaSyA8CHnU_1P-UMjwR9bK9Fn77zmymPNXC5Y")
-
+# Set up the OAuth 2.0 flow
 client_config = {
     "web": {
         "client_id": st.secrets["GOOGLE_CLIENT_ID"],
@@ -140,11 +69,10 @@ flow = Flow.from_client_config(
     redirect_uri=st.secrets["REDIRECT_URI"]
 )
 
-
-
+# Helper functions
 def preprocess_image(image):
-    img = image.resize((128, 128))  # Resize the image
-    img_array = img_to_array(img) / 255.0  # Normalize pixel values
+    img = image.resize((128, 128))
+    img_array = img_to_array(img) / 255.0
     return np.expand_dims(img_array, axis=0)
 
 def get_chatbot_response(user_input):
@@ -154,23 +82,20 @@ def get_chatbot_response(user_input):
     You are a medical chatbot specializing in cancer treatment, diagnosis, and prevention. 
     Provide concise answers, but elaborate when necessary for complex topics. 
     Always prioritize accurate medical information and encourage users to consult healthcare professionals for personalized advice.
-
+    User query: {user_input}
     """
-    response = chat.send_message(user_input)
-    response_text = response.text.replace("**", "").replace("\n\n", "\n").strip()
-    return response_text
+    response = chat.send_message(prompt)
+    return response.text.replace("**", "").replace("\n\n", "\n").strip()
 
 def get_nearby_hospitals(lat, lng):
-    # Search for nearby cancer hospitals
     places_result = gmaps.places_nearby(
         location=(lat, lng),
-        radius=10000,  # 10km in meters
+        radius=10000,
         keyword='cancer hospital'
     )
     
-    hospitals = places_result.get('results', [])[:10]  # Limit to top 10 results
+    hospitals = places_result.get('results', [])[:10]
     
-    # Get additional details for each hospital
     for hospital in hospitals:
         place_id = hospital['place_id']
         details = gmaps.place(place_id, fields=['formatted_phone_number', 'website'])
@@ -179,23 +104,18 @@ def get_nearby_hospitals(lat, lng):
     
     return hospitals
 
-# Function to get a readable location name
 def get_location_name(lat, lng):
     result = gmaps.reverse_geocode((lat, lng))
     if result:
-        # Try to get the most specific address component
         for component in result[0]['address_components']:
             if 'sublocality' in component['types']:
                 return component['long_name']
-        # If no sublocality, try to get the locality
         for component in result[0]['address_components']:
             if 'locality' in component['types']:
                 return component['long_name']
-        # If no specific component found, return the formatted address
         return result[0]['formatted_address']
     return "Unknown location"
 
-# Streamlit app layout
 def create_pdf_report(patient_info, image, prediction, class_label):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
@@ -265,7 +185,6 @@ def create_pdf_report(patient_info, image, prediction, class_label):
     buffer.seek(0)
     return buffer
 
-# ... (keep the existing functions) ...
 def display_user_info(credentials):
     try:
         service = build('oauth2', 'v2', credentials=credentials)
@@ -275,7 +194,6 @@ def display_user_info(credentials):
         st.sidebar.image(user_info['picture'], width=100)
     except Exception as e:
         st.sidebar.error(f"An error occurred while fetching user info: {e}")
-
 
 def main():
     st.title("Derm-AI Assistant")
