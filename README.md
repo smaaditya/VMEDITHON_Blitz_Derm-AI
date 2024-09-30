@@ -45,5 +45,5 @@ ReportLab: Generates PDF reports for download.
 Folium: Displays interactive maps for hospital locations.
 
 
-Check out our working website : https://derm-ai.streamlit.app/
+Check out our working website : [https://derm-ai.streamlit.app/](https://derm-ai-medithon.streamlit.app/)
 
